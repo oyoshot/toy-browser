@@ -42,7 +42,7 @@ pub enum BoxType<'a> {
 impl<'a> LayoutBox<'a> {
     fn new(box_type: BoxType) -> LayoutBox {
         LayoutBox {
-            box_type: box_type,
+            box_type,
             dimensions: Default::default(),
             children: Vec::new(),
         }
@@ -235,7 +235,7 @@ impl<'a> LayoutBox<'a> {
         for child in &mut self.children {
             child.layout(*d);
             // 各子が前の子の下にレイアウトされるように高さを増加させる
-            d.content.height = d.content.height + child.dimensions.margin_box().height;
+            d.content.height += child.dimensions.margin_box().height;
         }
     }
 
@@ -247,6 +247,17 @@ impl<'a> LayoutBox<'a> {
             self.dimensions.content.height = h;
         }
     }
+}
+
+pub fn layout_tree<'a>(
+    node: &'a StyledNode<'a>,
+    mut containing_block: Dimensions,
+) -> LayoutBox<'a> {
+    containing_block.content.height = 0.0;
+
+    let mut root_box = build_layout_tree(node);
+    root_box.layout(containing_block);
+    root_box
 }
 
 fn build_layout_tree<'a>(style_node: &'a StyledNode<'a>) -> LayoutBox<'a> {

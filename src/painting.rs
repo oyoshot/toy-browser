@@ -114,8 +114,8 @@ impl Canvas {
         };
         Canvas {
             pixels: vec![white; width * height],
-            width: width,
-            height: height,
+            width,
+            height,
         }
     }
 

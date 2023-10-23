@@ -44,10 +44,7 @@ impl Parser {
     }
 
     fn parse_tag_name(&mut self) -> String {
-        self.consume_while(|c| match c {
-            'a'..='z' | 'A'..='Z' | '0'..='9' => true,
-            _ => false,
-        })
+        self.consume_while(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9'))
     }
 
     fn parse_attributes(&mut self) -> dom::AttrMap {

@@ -119,7 +119,7 @@ impl Parser {
                 c => panic!("Unexpected character {} in selector list", c),
             }
         }
-        selectors.sort_by(|a, b| b.specificity().cmp(&a.specificity()));
+        selectors.sort_by_key(|b| std::cmp::Reverse(b.specificity()));
         selectors
     }
 
@@ -177,7 +177,7 @@ impl Parser {
 
         Declaration {
             name: property_type,
-            value: value,
+            value,
         }
     }
 
@@ -194,10 +194,7 @@ impl Parser {
     }
 
     fn parse_float(&mut self) -> f32 {
-        let s = self.consume_while(|c| match c {
-            '0'..='9' | '.' => true,
-            _ => false,
-        });
+        let s = self.consume_while(|c| matches!(c, '0'..='9' | '.'));
         s.parse().unwrap()
     }
 
@@ -261,10 +258,7 @@ impl Parser {
 }
 
 fn valid_identifier_char(c: char) -> bool {
-    match c {
-        'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' => true,
-        _ => false,
-    }
+    matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_')
 }
 
 #[cfg(test)]

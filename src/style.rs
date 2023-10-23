@@ -50,7 +50,7 @@ pub fn style_tree<'a>(root: &'a Node, stylesheet: &'a Stylesheet) -> StyledNode<
             NodeType::Text(_) => HashMap::new(),
         },
         children: root
-            .childlen
+            .children
             .iter()
             .map(|child| style_tree(child, stylesheet))
             .collect(),
@@ -83,7 +83,7 @@ fn matching_rules<'a>(elem: &ElementData, stylesheet: &'a Stylesheet) -> Vec<Mat
 fn match_rule<'a>(elem: &ElementData, rule: &'a Rule) -> Option<MatchRule<'a>> {
     rule.selectors
         .iter()
-        .find(|selector| matchs(elem, *selector))
+        .find(|selector| matchs(elem, selector))
         .map(|selector| (selector.specificity(), rule))
 }
 
@@ -114,54 +114,60 @@ fn matchs_simple_selector(elem: &ElementData, selector: &SimpleSelector) -> bool
     true
 }
 
-mod tests {
-    use std::collections::HashMap;
-
+#[cfg(test)]
+mod test {
     use crate::{
-        css::{self, Value},
-        dom::text,
+        css::{self, Color},
         html,
-        style::{style_tree, StyledNode},
     };
 
+    use super::*;
+
     #[test]
-    fn test_style_tree_overwrite() {
-        let html_source = String::from(r#"<p class="name">Hello</p>"#);
+    fn test_style() {
+        let html_node = html::parse(r#"<h1 class="test">head line</h1>"#.to_string());
+        let stylesheet = css::parse(r#".test { color: #000000; }"#.to_string());
+        let actual = style_tree(&html_node, &stylesheet);
 
-        let css_source = String::from(
-            r#"
-        p {
-            color: #cccccc;
-        }
-
-        p.name {
-            color: #cc0000;
-        }
-        "#,
+        assert_eq!(
+            actual,
+            StyledNode {
+                node: &Node {
+                    children: vec![Node {
+                        children: vec![],
+                        node_type: NodeType::Text("head line".to_string())
+                    }],
+                    node_type: NodeType::Element(ElementData {
+                        tag_name: "h1".to_string(),
+                        attributes: {
+                            let mut ret = HashMap::new();
+                            ret.insert("class".to_string(), "test".to_string());
+                            ret
+                        }
+                    })
+                },
+                specified_values: {
+                    let mut ret = HashMap::new();
+                    ret.insert(
+                        "color".to_string(),
+                        Value::ColorValue(Color {
+                            r: 0,
+                            g: 0,
+                            b: 0,
+                            a: 255,
+                        }),
+                    );
+                    ret
+                },
+                children: vec![StyledNode {
+                    node: &Node {
+                        children: vec![],
+                        node_type: NodeType::Text("head line".to_string()),
+                    },
+                    specified_values: HashMap::new(),
+                    children: vec![]
+                }]
+            }
         );
-        let root = html::parse(html_source);
-        let css = css::parse(css_source);
-
-        let mut specified_values = HashMap::new();
-        specified_values.insert(
-            String::from("color"),
-            Value::ColorValue(css::Color {
-                r: 204,
-                g: 0,
-                b: 0,
-                a: 255,
-            }),
-        );
-        let text = text(String::from("Hello"));
-        let expected = StyledNode {
-            node: &root,
-            specified_values: specified_values,
-            children: vec![StyledNode {
-                node: &text,
-                specified_values: HashMap::new(),
-                children: vec![],
-            }],
-        };
-        assert_eq!(expected, style_tree(&root, &css));
     }
 }

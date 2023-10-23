@@ -5,7 +5,7 @@ pub type AttrMap = HashMap<String, String>;
 #[derive(Debug, PartialEq)]
 pub struct Node {
     // data common to all nodes
-    pub childlen: Vec<Node>,
+    pub children: Vec<Node>,
 
     // data specific to each node type
     pub node_type: NodeType,
@@ -25,14 +25,14 @@ pub struct ElementData {
 
 pub fn text(data: String) -> Node {
     Node {
-        childlen: Vec::new(),
+        children: Vec::new(),
         node_type: NodeType::Text(data),
     }
 }
 
 pub fn elem(name: String, attrs: AttrMap, children: Vec<Node>) -> Node {
     Node {
-        childlen: children,
+        children,
         node_type: NodeType::Element(ElementData {
             tag_name: name,
             attributes: attrs,
